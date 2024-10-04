@@ -43,27 +43,25 @@ class Pacman:
         elif self.behavior == 'auto':
             maze_table = maze.maze
             width, height = len(maze_table[0]), len(maze_table)
-            radius = ceil(min(width, height) / 5)
+            radius = 2
             ghost_positions = [(g.x, g.y) for g in ghosts]
             bfs = bfs_search(maze_table, ghost_positions)
             if bfs[self.x][self.y] <= radius:
-                positions_with_big_radius = []
-                for x in range(height):
-                    for y in range(width):
-                        if bfs[x][y] > radius and maze_table[x][y] != '#':
-                            positions_with_big_radius.append((x, y))
-                new_bfs = bfs_search(maze_table, positions_with_big_radius)
-                possible_directions = [Direction(1, 0), Direction(-1, 0), Direction(0, 1), Direction(0, -1)]
-                best_direction = None
-                for direction in possible_directions:
-                    if new_bfs[self.x + direction.x][self.y + direction.y] < new_bfs[self.x][self.y] and \
-                            bfs[self.x + direction.x][self.y + direction.y] >= bfs[self.x][self.y]:
-                        best_direction = direction
-                if best_direction is not None:
-                    self.direction = best_direction
-                else:
-                    self.direction = random.choice(possible_directions)
-
+                Directions = [Direction(1, 0), Direction(-1, 0), Direction(0, 1), Direction(0, -1)]
+                Directions = list(filter(lambda direction: self.check_direction(maze_table, direction), Directions))
+                if len(Directions) > 0:
+                    best_direction = Directions[0]
+                    for direction in Directions:
+                        if bfs[self.x + direction.x][self.y + direction.y] > bfs[self.x + best_direction.x][
+                            self.y + best_direction.y]:
+                            best_direction = direction
+                    best_directions = []
+                    for direction in Directions:
+                        if bfs[self.x + direction.x][self.y + direction.y] == \
+                                bfs[self.x + best_direction.x][self.y + best_direction.y] or bfs[self.x + direction.x][
+                            self.y + direction.y] > radius:
+                            best_directions.append(direction)
+                    self.direction = random.choice(best_directions)
             else:
                 directions = [Direction(1, 0), Direction(-1, 0), Direction(0, 1), Direction(0, -1)]
                 positions_food = [(x, y) for x, y in maze.food_positions]
